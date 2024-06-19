@@ -1,0 +1,36 @@
+---
+- name: System Initialize
+  hosts: localhost
+  vars:
+    primary_host_ip: "{{ primary_host_ip }}"
+    cloud_platform_manager_ip: "{{ cloud_platform_manager_ip }}"
+    day1_json_file: "{{ day1_json_file }}"
+    ldaps_cert_file: "{{ ldaps_cert_file }}"
+  tasks:
+    - name: Perform full system initialization for APEX Cloud Platform Azure
+      dellemc.apexcp_azure.dell_apexcp_azure_system_initialize_full:
+        primary_host_ip: "{{ primary_host_ip }}"
+        cloud_platform_manager_ip: "{{ cloud_platform_manager_ip }}"
+        ldaps_cert_file: "{{ ldaps_cert_file }}"
+        day1_json_file: "{{ day1_json_file }}"
+      async: 36000
+      poll: 0
+      register: system_initialize_job
+
+    - name: Check if system initialization job is completed...The system initialization is still ongoing
+      async_status:
+        jid: "{{ system_initialize_job.ansible_job_id }}"
+      register: system_initialize_job_result
+      until: system_initialize_job_result.finished
+      retries: 600
+      delay: 60
+
+    - name: Get system initialization result
+      debug:
+        msg:
+        - "changed: {{system_initialize_job_result['changed']}}"
+        - "failed: {{system_initialize_job_result['failed']}}"
+        - "msg: {{system_initialize_job_result['msg']}}"
+        - "os_provision_result: {{system_initialize_job_result['os_provision_result']}}"
+        - "initialize_cert_result: {{system_initialize_job_result['initialize_cert_result']}}"
+        - "cluster_deployment_result: {{system_initialize_job_result['cluster_deployment_result']}}"

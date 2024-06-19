@@ -1,0 +1,30 @@
+---
+- name: Day1 Cluster Deployment
+  hosts: localhost
+  vars:
+    ldaps_cert_file: "{{ ldaps_cert_file }}"
+    cloud_platform_manager_ip: "{{ cloud_platform_manager_ip }}"
+    day1_json_file: "{{ day1_json_file }}"
+  tasks:
+    - name: Configure and deploy a new APEX Cloud Platform cluster for Azure
+      dellemc.apexcp_azure.dell_apexcp_azure_cluster_deployment:
+        cloud_platform_manager_ip: "{{ cloud_platform_manager_ip }}"
+        ldaps_cert_file: "{{ ldaps_cert_file }}"
+        day1_json_file: "{{ day1_json_file }}"
+      async: 36000
+      poll: 0
+      register: cluster_deployment_status
+    - name: Check if cluster deployment job is completed...The cluster deployment is still ongoing
+      async_status:
+        jid: "{{ cluster_deployment_status.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 600
+      delay: 60
+    - name: Get cluster deployment result
+      debug:
+        msg:
+        - "changed: {{job_result['changed']}}"
+        - "failed: {{job_result['failed']}}"
+        - "msg: {{job_result['msg']}}"
+        - "day1_initialization: {{job_result['cluster_deployment_result']}}"

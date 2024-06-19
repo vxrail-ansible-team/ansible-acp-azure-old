@@ -1,0 +1,16 @@
+---
+- name: Initialize LDAPS Certificate
+  hosts: localhost
+  vars:
+    cloud_platform_manager_ip: "{{ cloud_platform_manager_ip }}"
+    ldaps_cert_file: "{{ ldaps_cert_file }}"
+  tasks:
+    - name: Initialize LDAPS Certificate
+      dellemc.apexcp_azure.dell_apexcp_azure_initialize_ldaps_cert:
+        cloud_platform_manager_ip: "{{ cloud_platform_manager_ip }}"
+        ldaps_cert_file: "{{ ldaps_cert_file }}"
+      register: initialize_ldaps_cert_result
+
+    - name: Get Initialize LDAPS Certificate Result
+      debug:
+        msg:  "{{initialize_ldaps_cert_result}}"
